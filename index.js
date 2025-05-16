@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
@@ -106,3 +107,9 @@ app.get('/profile', async (req, res) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+>>>>>>> 3c6344b866fdfe7dba401bbe7c6dfdb07b39efc4
