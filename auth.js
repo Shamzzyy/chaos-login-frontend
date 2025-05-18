@@ -1,36 +1,42 @@
 // auth.js
+require('dotenv').config();
+
+const { createClient } = require('@supabase/supabase-js');
 
 const registerForm = document.getElementById('register-form');
 const loginForm = document.getElementById('login-form');
 const registerMessage = document.getElementById('register-message');
 const loginMessage = document.getElementById('login-message');
 
-const API_URL = 'http://localhost:5000'; // Your backend URL
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Register handler
 registerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const username = document.getElementById('reg-username').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
+  const username = document.getElementById('reg-username').value.trim();
 
   try {
-    const res = await fetch(`${API_URL}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password }),
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username }
+      }
     });
 
-    const data = await res.json();
-
-    if (res.ok) {
-      registerMessage.style.color = 'green';
-      registerMessage.textContent = data.message || 'Registration successful!';
-      registerForm.reset();
-    } else {
+    if (error) {
       registerMessage.style.color = 'red';
-      registerMessage.textContent = data.message || 'Registration failed.';
+      registerMessage.textContent = error.message;
+    } else {
+      registerMessage.style.color = 'green';
+      registerMessage.textContent = 'Registration successful! Check your email to confirm.';
+      registerForm.reset();
     }
   } catch (err) {
     registerMessage.style.color = 'red';
@@ -42,30 +48,24 @@ registerForm.addEventListener('submit', async (e) => {
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const username = document.getElementById('login-username').value.trim();
+  const email = document.getElementById('login-username').value.trim();
   const password = document.getElementById('login-password').value;
 
   try {
-    const res = await fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    const data = await res.json();
-
-    if (res.ok) {
+    if (error) {
+      loginMessage.style.color = 'red';
+      loginMessage.textContent = error.message;
+    } else {
       loginMessage.style.color = 'green';
       loginMessage.textContent = 'Login successful!';
 
-      // Save JWT token to localStorage for future authenticated requests
-      localStorage.setItem('token', data.token);
+      // Save access token to localStorage
+      localStorage.setItem('access_token', data.session.access_token);
 
-      // Redirect to profile page or elsewhere
+      // Redirect to profile page
       window.location.href = 'profile.html';
-    } else {
-      loginMessage.style.color = 'red';
-      loginMessage.textContent = data.message || 'Login failed.';
     }
   } catch (err) {
     loginMessage.style.color = 'red';
